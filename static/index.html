@@ -1,1 +1,31 @@
-<!doctype html><title>Agente de Informes</title>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agente de Informes</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="layout">
+    <section class="panel panel--chat">
+      <header class="panel__header"><h2>Conversación</h2></header>
+      <div id="chat" class="chat" aria-live="polite"></div>
+      <form id="composer" class="composer">
+        <input id="prompt" type="text" autocomplete="off"
+               placeholder="Escribe un tema, p. ej. «energía eólica marina en España»">
+        <button id="send" type="submit">Enviar</button>
+      </form>
+    </section>
+    <section class="panel panel--report">
+      <header class="panel__header">
+        <h2 id="report-title">Informe</h2>
+        <button id="download" type="button" disabled>Descargar .md</button>
+      </header>
+      <div id="empty" class="empty">Escribe un tema en el chat para generar un brief.</div>
+      <article id="report" class="report"></article>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
