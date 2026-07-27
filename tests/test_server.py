@@ -171,3 +171,22 @@ def test_root_serves_the_app_shell(client):
     response = client.get("/")
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
+
+
+def test_tool_input_falls_back_to_str_for_a_non_dict_input():
+    event = {"data": {"input": "raw string input"}}
+    assert server._tool_input(event) == "raw string input"
+
+
+def test_tool_input_truncates_a_non_dict_input_to_input_chars():
+    event = {"data": {"input": "x" * (server.INPUT_CHARS + 50)}}
+    result = server._tool_input(event)
+    assert len(result) == server.INPUT_CHARS
+
+
+def test_summary_reads_the_content_attribute_of_a_tool_message_output():
+    from langchain_core.messages import ToolMessage
+
+    output = ToolMessage(content="5 resultados para «IA»\n\n[1] título", tool_call_id="call-1")
+    event = {"data": {"output": output}}
+    assert server._summary(event) == "5 resultados para «IA»"
