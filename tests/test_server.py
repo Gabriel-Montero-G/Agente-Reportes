@@ -39,12 +39,12 @@ def chunk(text: str):
     return {"event": "on_chat_model_stream", "name": "model", "data": {"chunk": AIMessageChunk(content=text)}}
 
 
-def tool_start(name: str, tool_input: dict):
-    return {"event": "on_tool_start", "name": name, "data": {"input": tool_input}}
+def tool_start(name: str, tool_input: dict, run_id: str = "run-1"):
+    return {"event": "on_tool_start", "name": name, "data": {"input": tool_input}, "run_id": run_id}
 
 
-def tool_end(name: str, output: str):
-    return {"event": "on_tool_end", "name": name, "data": {"output": output}}
+def tool_end(name: str, output: str, run_id: str = "run-1"):
+    return {"event": "on_tool_end", "name": name, "data": {"output": output}, "run_id": run_id}
 
 
 def install(monkeypatch, events, error=None, report: str = REPORT):
@@ -64,10 +64,10 @@ def test_full_happy_path_event_sequence(monkeypatch, client):
     install(
         monkeypatch,
         [
-            tool_start("tavily_search", {"query": "IA en España"}),
-            tool_end("tavily_search", "5 resultados para «IA en España»\n\n[1] ..."),
-            tool_start("write_report", {"markdown": REPORT}),
-            tool_end("write_report", "Informe actualizado."),
+            tool_start("tavily_search", {"query": "IA en España"}, run_id="search-1"),
+            tool_end("tavily_search", "5 resultados para «IA en España»\n\n[1] ...", run_id="search-1"),
+            tool_start("write_report", {"markdown": REPORT}, run_id="write-1"),
+            tool_end("write_report", "Informe actualizado.", run_id="write-1"),
             chunk("Listo. "),
             chunk("Pídeme lo que quieras ampliar."),
         ],
@@ -79,6 +79,31 @@ def test_full_happy_path_event_sequence(monkeypatch, client):
 
     assert response.status_code == 200
     assert types == ["step", "step_done", "step", "report", "step_done", "token", "token", "done"]
+    step, step_done = events[0], events[1]
+    assert step["run_id"] == step_done["run_id"] == "search-1"
+    write_step, write_done = events[2], events[4]
+    assert write_step["run_id"] == write_done["run_id"] == "write-1"
+
+
+def test_step_and_step_done_carry_matching_run_ids_for_concurrent_tool_calls(monkeypatch, client):
+    """Two concurrent calls to the same tool must be distinguishable by run_id,
+    not just by tool name, so the UI can resolve each step_done to the right
+    in-flight step even when several calls to the same tool overlap."""
+    install(
+        monkeypatch,
+        [
+            tool_start("tavily_search", {"query": "a"}, run_id="run-a"),
+            tool_start("tavily_search", {"query": "b"}, run_id="run-b"),
+            tool_end("tavily_search", "resultado a", run_id="run-a"),
+            tool_end("tavily_search", "resultado b", run_id="run-b"),
+        ],
+    )
+    events = parse_sse(client.post("/api/chat", json={"session_id": "s9", "message": "x"}).text)
+    steps = [e for e in events if e["type"] in ("step", "step_done")]
+    assert steps[0]["run_id"] == "run-a" and steps[0]["input"] == "a"
+    assert steps[1]["run_id"] == "run-b" and steps[1]["input"] == "b"
+    assert steps[2]["run_id"] == "run-a" and steps[2]["summary"] == "resultado a"
+    assert steps[3]["run_id"] == "run-b" and steps[3]["summary"] == "resultado b"
 
 
 def test_step_events_carry_the_query(monkeypatch, client):

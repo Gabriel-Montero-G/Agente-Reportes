@@ -65,9 +65,17 @@ async def event_stream(session: Session, message: str) -> AsyncIterator[str]:
                 if text:
                     yield sse({"type": "token", "text": text})
             elif kind == "on_tool_start":
-                yield sse({"type": "step", "tool": event["name"], "input": _tool_input(event)})
+                yield sse(
+                    {
+                        "type": "step",
+                        "tool": event["name"],
+                        "input": _tool_input(event),
+                        "run_id": event["run_id"],
+                    }
+                )
             elif kind == "on_tool_end":
                 name = event["name"]
+                run_id = event["run_id"]
                 if name == "write_report":
                     published = True
                     yield sse(
@@ -77,9 +85,23 @@ async def event_stream(session: Session, message: str) -> AsyncIterator[str]:
                             "html": render_markdown(session.report),
                         }
                     )
-                    yield sse({"type": "step_done", "tool": name, "summary": "Informe publicado"})
+                    yield sse(
+                        {
+                            "type": "step_done",
+                            "tool": name,
+                            "summary": "Informe publicado",
+                            "run_id": run_id,
+                        }
+                    )
                 else:
-                    yield sse({"type": "step_done", "tool": name, "summary": _summary(event)})
+                    yield sse(
+                        {
+                            "type": "step_done",
+                            "tool": name,
+                            "summary": _summary(event),
+                            "run_id": run_id,
+                        }
+                    )
         if not published and not session.report:
             yield sse({"type": "error", "message": NO_REPORT_MESSAGE})
     except Exception as exc:  # CancelledError is a BaseException and passes through

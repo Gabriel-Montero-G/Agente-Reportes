@@ -102,13 +102,13 @@ formEl.addEventListener("submit", async (event) => {
         assistantEl.textContent += event.text;
         chatEl.scrollTop = chatEl.scrollHeight;
       } else if (event.type === "step") {
-        openSteps.set(event.tool, addStep(event.tool, event.input));
+        openSteps.set(event.run_id, addStep(event.tool, event.input));
       } else if (event.type === "step_done") {
-        const stepEl = openSteps.get(event.tool);
+        const stepEl = openSteps.get(event.run_id);
         if (stepEl) {
           stepEl.textContent = `✓ ${event.summary}`;
           stepEl.classList.add("step--done");
-          openSteps.delete(event.tool);
+          openSteps.delete(event.run_id);
         }
       } else if (event.type === "report") {
         showReport(event.html, event.markdown);
