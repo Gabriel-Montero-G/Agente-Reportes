@@ -29,3 +29,15 @@ def test_keeps_http_links_and_opens_them_in_a_new_tab():
 
 def test_empty_input_renders_empty_string():
     assert render_markdown("") == ""
+
+
+def test_code_blocks_with_script_tags_are_escaped_not_deleted():
+    """Regression test: fenced code blocks should quote script tags safely, not delete them."""
+    html = render_markdown('```html\n<script>alert(1)</script>\n```')
+    # The content should still be present (escaped), not deleted
+    assert "alert" in html
+    assert "1" in html
+    # Should be in a code block (pre/code tags allowed)
+    assert "<pre>" in html or "<code>" in html
+    # Script tag should be escaped, not present as raw tag
+    assert "<script>" not in html
