@@ -106,8 +106,9 @@ formEl.addEventListener("submit", async (event) => {
       } else if (event.type === "step_done") {
         const stepEl = openSteps.get(event.run_id);
         if (stepEl) {
-          stepEl.textContent = `✓ ${event.summary}`;
-          stepEl.classList.add("step--done");
+          const failed = typeof event.summary === "string" && event.summary.startsWith("Búsqueda fallida");
+          stepEl.textContent = failed ? `⚠ ${event.summary}` : `✓ ${event.summary}`;
+          stepEl.classList.add(failed ? "step--error" : "step--done");
           openSteps.delete(event.run_id);
         }
       } else if (event.type === "report") {

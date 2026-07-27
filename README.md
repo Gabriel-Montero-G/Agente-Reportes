@@ -71,11 +71,11 @@ pytest
 pytest -m live
 ```
 
-Hay 48 tests offline que validan lógica, configuración y manejo de errores. Un test live opcional valida la integración completa con OpenRouter y Tavily.
+Hay 50 tests offline que validan lógica, configuración y manejo de errores. Un test live opcional valida la integración completa con OpenRouter y Tavily.
 
 ## Límites conocidos
 
 - **Sin persistencia:** al reiniciar el servidor, todas las sesiones se pierden.
-- **Un único usuario:** no hay multi-usuario; cada navegador comparte la misma sesión.
+- **Sin autenticación:** no hay control de acceso; cualquiera que pueda alcanzar el puerto local puede leer el informe de cualquier sesión vía `GET /api/report/{session_id}` si adivina u observa el `session_id`. Cada pestaña sí tiene su propia sesión aislada (`session_id` vive en `sessionStorage`, por pestaña), pero esto no es apto para un entorno multi-tenant sin confianza mutua entre usuarios.
 - **Sin exportación a PDF:** solo se descarga en formato Markdown.
 - **AgentExecutor en mantenimiento:** LangChain marcó `AgentExecutor` como deprecated desde la v1.0, por lo que se fija `langchain<1.0` en requirements.txt.

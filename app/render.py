@@ -17,12 +17,18 @@ ALLOWED_ATTRIBUTES = {"a": ["href", "title"]}
 ALLOWED_PROTOCOLS = frozenset({"http", "https", "mailto"})
 
 
-def _harden_link(attrs, new=False):
+def _harden_link(
+    attrs: dict[tuple[str | None, str] | str, str], new: bool = False
+) -> dict[tuple[str | None, str] | str, str]:
     """Set target="_blank" (via bleach's default callback) and pair it with
     rel="noopener noreferrer" to prevent reverse tabnabbing: the report's
     "Fuentes" section links to arbitrary, untrusted pages scraped from web
     search, and a hostile page opened via target="_blank" without rel could
-    otherwise rewrite this tab's location via window.opener."""
+    otherwise rewrite this tab's location via window.opener.
+
+    `attrs` keys are bleach's `(namespace, name)` tuples for HTML attributes
+    (e.g. ``(None, "target")``), plus a special ``"_text"`` string key for the
+    link's visible text; values are always strings."""
     attrs = target_blank(attrs, new)
     if (None, "target") in attrs:
         attrs[(None, "rel")] = "noopener noreferrer"
