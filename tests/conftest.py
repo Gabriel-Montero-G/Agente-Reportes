@@ -1,10 +1,19 @@
 """Shared fixtures. No test in the default suite touches the network."""
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from app import config
 from app import session as session_mod
+
+# app.server calls get_settings() at import time (fail fast on a missing key).
+# pytest imports every test module during collection, before any fixture below
+# runs, so the fake credentials must already be in the real environment by the
+# time `import app.server` happens.
+os.environ.setdefault("OPENROUTER_API_KEY", "test-openrouter-key")
+os.environ.setdefault("TAVILY_API_KEY", "test-tavily-key")
 
 
 @pytest.fixture(autouse=True)
