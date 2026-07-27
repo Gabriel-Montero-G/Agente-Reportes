@@ -54,10 +54,10 @@ def _summary(event: dict) -> str:
 
 async def event_stream(session: Session, message: str) -> AsyncIterator[str]:
     """Translate the agent's event stream into SSE frames."""
-    agent = build_agent(session)
     config = {"configurable": {"session_id": session.id}}
     published = False
     try:
+        agent = build_agent(session)
         async for event in agent.astream_events({"input": message}, config=config, version="v2"):
             kind = event["event"]
             if kind == "on_chat_model_stream":
