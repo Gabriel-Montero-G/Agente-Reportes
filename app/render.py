@@ -17,6 +17,18 @@ ALLOWED_ATTRIBUTES = {"a": ["href", "title"]}
 ALLOWED_PROTOCOLS = frozenset({"http", "https", "mailto"})
 
 
+def _harden_link(attrs, new=False):
+    """Set target="_blank" (via bleach's default callback) and pair it with
+    rel="noopener noreferrer" to prevent reverse tabnabbing: the report's
+    "Fuentes" section links to arbitrary, untrusted pages scraped from web
+    search, and a hostile page opened via target="_blank" without rel could
+    otherwise rewrite this tab's location via window.opener."""
+    attrs = target_blank(attrs, new)
+    if (None, "target") in attrs:
+        attrs[(None, "rel")] = "noopener noreferrer"
+    return attrs
+
+
 def render_markdown(text: str) -> str:
     """Convert markdown to HTML that is safe to inject into the report panel."""
     if not text:
@@ -29,4 +41,4 @@ def render_markdown(text: str) -> str:
         protocols=ALLOWED_PROTOCOLS,
         strip=False,
     )
-    return bleach.linkify(clean, callbacks=[target_blank])
+    return bleach.linkify(clean, callbacks=[_harden_link])
