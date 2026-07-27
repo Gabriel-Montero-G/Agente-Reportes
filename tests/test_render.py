@@ -11,8 +11,11 @@ def test_renders_headings_and_lists():
 
 def test_strips_script_tags():
     html = render_markdown("Hola <script>alert('xss')</script> mundo")
+    # Script tag should be escaped/removed, not present as raw HTML tag
     assert "<script>" not in html
-    assert "alert" not in html
+    # Surrounding text is preserved (bleach escapes/strips tags without deleting content)
+    assert "Hola" in html
+    assert "mundo" in html
 
 
 def test_strips_event_handlers_and_javascript_urls():
@@ -32,12 +35,17 @@ def test_empty_input_renders_empty_string():
 
 
 def test_code_blocks_with_script_tags_are_escaped_not_deleted():
-    """Regression test: fenced code blocks should quote script tags safely, not delete them."""
+    """Regression test: code blocks should quote script tags safely, not delete them."""
+    # Test fenced code block
     html = render_markdown('```html\n<script>alert(1)</script>\n```')
-    # The content should still be present (escaped), not deleted
     assert "alert" in html
     assert "1" in html
-    # Should be in a code block (pre/code tags allowed)
     assert "<pre>" in html or "<code>" in html
-    # Script tag should be escaped, not present as raw tag
+    assert "<script>" not in html
+
+    # Test inline backticks (single-backtick span)
+    html = render_markdown("Se encontró este código: `<script>alert(1)</script>` que es peligroso.")
+    assert "alert" in html
+    assert "1" in html
+    assert "<code>" in html
     assert "<script>" not in html
