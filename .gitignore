@@ -10,6 +10,7 @@ venv/
 *.egg-info/
 
 # Editor / OS
+.superpowers/
 .vscode/
 .idea/
 Thumbs.db

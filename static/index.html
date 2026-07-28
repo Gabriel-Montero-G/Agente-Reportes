@@ -3,29 +3,120 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Agente de Informes</title>
+  <title>Síntesis — Agente de Informes</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <main class="layout">
-    <section class="panel panel--chat">
-      <header class="panel__header"><h2>Conversación</h2></header>
-      <div id="chat" class="chat" aria-live="polite"></div>
+  <header class="topbar">
+    <div class="brand"><span class="brand__mark" aria-hidden="true">◎</span>SÍNTESIS</div>
+    <div class="topbar__topic">
+      <span class="topbar__label">TEMA</span>
+      <span id="topic-title">Sin informe todavía</span>
+    </div>
+    <div class="topbar__actions">
+      <button id="copy-md" type="button" class="btn btn--ghost" disabled>Copiar Markdown</button>
+      <button id="download" type="button" class="btn btn--ghost" disabled>Descargar .md</button>
+      <div class="avatar" title="Usuario" aria-hidden="true">TÚ</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar__scroll">
+        <div class="proceso">
+          <div class="proceso__header">
+            <h2>Proceso</h2>
+            <span id="elapsed" class="proceso__elapsed">—</span>
+            <span id="status-pill" class="pill pill--idle">en espera</span>
+          </div>
+
+          <ol class="timeline" id="timeline">
+            <li class="timeline__item" id="step-plan">
+              <span class="timeline__dot" aria-hidden="true"></span>
+              <div class="timeline__body">
+                <h3>Plan de investigación</h3>
+                <p class="timeline__sub" id="plan-sub">Escribe un tema y pulsa «Generar» para empezar.</p>
+              </div>
+            </li>
+            <li class="timeline__item" id="step-search" hidden>
+              <span class="timeline__dot" aria-hidden="true"></span>
+              <div class="timeline__body">
+                <h3>Búsqueda web</h3>
+                <p class="timeline__sub" id="search-sub"></p>
+                <ul class="query-list" id="query-list"></ul>
+              </div>
+            </li>
+            <li class="timeline__item" id="step-sources" hidden>
+              <span class="timeline__dot" aria-hidden="true"></span>
+              <div class="timeline__body">
+                <h3>Selección de fuentes</h3>
+                <p class="timeline__sub" id="sources-sub"></p>
+                <div class="chips" id="source-chips"></div>
+              </div>
+            </li>
+            <li class="timeline__item" id="step-report" hidden>
+              <span class="timeline__dot" aria-hidden="true"></span>
+              <div class="timeline__body">
+                <h3>Informe publicado</h3>
+                <p class="timeline__sub" id="report-sub"></p>
+              </div>
+            </li>
+          </ol>
+        </div>
+
+        <div class="note" id="agent-note" hidden>
+          <h3 class="note__title">Nota del agente</h3>
+          <p id="note-text"></p>
+          <div class="note__actions">
+            <button type="button" class="chip-btn" data-prompt="Profundiza en uno de los puntos del informe, el que consideres más relevante para el tema.">Profundizar en un punto</button>
+            <button type="button" class="chip-btn" data-prompt="Añade referencias a frameworks u herramientas relevantes para el tema del informe.">Añadir frameworks</button>
+            <button type="button" class="chip-btn" data-prompt="Convierte los puntos clave del informe en una checklist operativa, manteniendo el resto del informe.">Generar checklist</button>
+          </div>
+        </div>
+
+        <div class="error-banner" id="error-banner" hidden></div>
+      </div>
+
       <form id="composer" class="composer">
-        <input id="prompt" type="text" autocomplete="off"
-               placeholder="Escribe un tema, p. ej. «energía eólica marina en España»">
-        <button id="send" type="submit">Enviar</button>
+        <textarea id="prompt" rows="2" placeholder="Escribe un tema, p. ej. «energía eólica marina en España»"></textarea>
+        <div class="composer__row">
+          <label class="select">
+            profundidad
+            <select id="depth">
+              <option value="baja">baja</option>
+              <option value="media" selected>media</option>
+              <option value="alta">alta</option>
+            </select>
+          </label>
+          <label class="select">
+            idioma
+            <select id="lang">
+              <option value="es" selected>es</option>
+              <option value="en">en</option>
+            </select>
+          </label>
+          <button id="send" type="submit" class="btn btn--accent">Generar</button>
+        </div>
       </form>
-    </section>
-    <section class="panel panel--report">
-      <header class="panel__header">
-        <h2 id="report-title">Informe</h2>
-        <button id="download" type="button" disabled>Descargar .md</button>
-      </header>
-      <div id="empty" class="empty">Escribe un tema en el chat para generar un brief.</div>
-      <article id="report" class="report"></article>
-    </section>
-  </main>
+
+      <div class="history-nav" id="history-nav" hidden>
+        <button type="button" id="history-prev" aria-label="Informe anterior">‹</button>
+        <span id="history-pos"></span>
+        <button type="button" id="history-next" aria-label="Informe siguiente">›</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="main__scroll">
+        <div id="empty" class="empty">Escribe un tema en el panel izquierdo para generar un brief.</div>
+        <article id="report-view" class="report-view" hidden>
+          <p class="report-meta" id="report-meta"></p>
+          <div id="report" class="report"></div>
+        </article>
+      </div>
+    </main>
+  </div>
+
   <script src="/static/app.js"></script>
 </body>
 </html>
