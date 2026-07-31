@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    image: agente-reportes
+    ports:
+      - "8000:8000"
+    # Read at container start from the host — the keys never enter the image.
+    env_file: .env
+    restart: unless-stopped

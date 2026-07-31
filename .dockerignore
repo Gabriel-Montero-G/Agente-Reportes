@@ -1,0 +1,33 @@
+# Secrets — must never reach the image; the container gets them via env_file.
+.env
+.env.example
+
+# Windows virtualenv: hundreds of MB of binaries that do not run on Linux.
+.venv/
+venv/
+
+# Python build artefacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Not needed at runtime
+tests/
+docs/
+*.md
+.git/
+.gitignore
+
+# Editor / OS / tooling
+.claude/
+.superpowers/
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Docker's own files
+Dockerfile
+.dockerignore
+docker-compose.yml

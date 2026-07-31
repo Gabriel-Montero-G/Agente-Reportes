@@ -56,6 +56,18 @@ uvicorn app.server:app --reload --port 8000
 
 Then open http://127.0.0.1:8000 in your browser.
 
+## Running it with Docker
+
+An alternative to the venv — no local Python required. Create `.env` from `.env.example` first (the keys stay on the host; they are never baked into the image), then:
+
+```powershell
+docker compose up --build
+```
+
+Open http://localhost:8000. Stop it with `docker compose down`, follow the logs with `docker compose logs -f`.
+
+The container runs a single uvicorn worker, because sessions live in a per-process dictionary — see *Known limitations*. The listening port honours `$PORT` if set, so the same image runs unchanged on a PaaS that assigns one.
+
 ## Quota limits
 
 | Provider | Free tier | Practical impact |

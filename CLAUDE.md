@@ -23,13 +23,21 @@ pytest tests/test_agent.py::test_agent_searches_then_publishes
 pytest -m live
 ```
 
+```powershell
+# Docker — an alternative to the venv for running the app; needs .env present.
+# The image is deliberately portable: no secrets baked in, port from $PORT.
+docker compose up --build
+docker compose logs -f
+docker compose down
+```
+
 There is no build/lint step — this is a plain FastAPI app served directly by uvicorn, no bundler for the frontend (`static/`).
 
 ## Architecture
 
 **Request flow:** browser → `POST /api/chat` (`app/server.py`) → per-session `AgentExecutor` (`app/agent.py`) → `astream_events(version="v2")` → `event_stream()` translates each LangChain event into one SSE `data: {...}\n\n` frame → browser's hand-rolled SSE parser (`static/app.js`).
 
-**Everything is in-memory, single-process, no auth.** `app/session.py` holds a module-level `dict[str, Session]`; a `Session` bundles one browser tab's chat history *and* its current report markdown. Restarting the process discards all state — this is by design, not a bug to fix. There is no access control: anyone who can reach the port and knows/guesses a `session_id` can read that session's report via `GET /api/report/{id}`.
+**Everything is in-memory, single-process, no auth.** `app/session.py` holds a module-level `dict[str, Session]`; a `Session` bundles one browser tab's chat history *and* its current report markdown. Restarting the process discards all state — this is by design, not a bug to fix. This is also why the container runs one uvicorn worker and must not be scaled to replicas: a request landing on a process that lacks the session's report would 404 on `GET /api/report/{id}`. There is no access control: anyone who can reach the port and knows/guesses a `session_id` can read that session's report via `GET /api/report/{id}`.
 
 **The agent is composed per-session, not globally**, because `write_report` (`app/tools.py::make_write_report`) closes over one specific `Session` object. This is what keeps two browser tabs from overwriting each other's report — there's no session-id parameter threaded through the tool call itself. `app/agent.py::build_agent(session, llm=None)` takes an optional injected `llm` so tests can pass a fake chat model without touching `app.llm.build_llm()` (the only place OpenRouter credentials are used).
 
